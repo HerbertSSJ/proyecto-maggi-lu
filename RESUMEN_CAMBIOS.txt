@@ -1,0 +1,10 @@
+TÍTULO DEL COMMIT:
+feat: Implementar módulo completo de gestión de ventas con CRUD de boletas
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DESCRIPCIÓN:
+
+Se implementó todo el módulo de ventas (Módulo de Gestión de Ventas - CRUD completo de boletas) para MIMImarket. Básicamente creé tres páginas principales: primero la de login que valida dos usuarios (Ignacio y Herbert), después la página de ventas donde se crean las boletas con un carrito que permite agregar productos, buscar por nombre y seleccionar método de pago (efectivo, tarjeta o fiado), y por último la página de historial donde se ven todas las boletas guardadas y se pueden editar o eliminar. También hice un archivo de tipos para las boletas (Boleta e ItemCarrito) y un archivo de funciones para guardar/obtener/actualizar/eliminar boletas usando localStorage, así funciona todo sin base de datos. Agregué un menú lateral con el logo de MIMImarket que tiene un botón hamburguesa para celular, le puse estilos responsivos para que se vea bien en cualquier tamaño de pantalla con los colores morados de la marca (#5e2145). Lo más importante es que arreglé la autenticación para que la sesión se guarde en localStorage y no te eche del sistema cuando navegas entre páginas. Preservé todo lo que hizo mi compañero (inventario, productos, todo eso), solo agregué la parte de ventas y boletas. Todo está funcionando y listo para presentar.
+
+═══════════════════════════════════════════════════════════════════════════════
