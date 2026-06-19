@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Producto } from "@/types/Producto";
+import styles from "@/app/inventario/inventario.module.css";
 
 interface ProductoFormProps {
   onAgregar: (datos: Omit<Producto, "id" | "fechaCreacion" | "responsable">) => void;
@@ -96,73 +97,73 @@ export default function ProductoForm({
   }
 
   return (
-    <div className="division">
-      <div className="caja">
-        <h2 className="tituloCaja">
+    <div className={styles.division}>
+      <div className={styles.caja}>
+        <h2 className={styles.tituloCaja}>
           {productoEditando ? "Editar Producto" : "Agregar Producto"}
         </h2>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div style={{ marginBottom: "12px" }}>
+          <div className={styles.grupoInput}>
             <label htmlFor="nombre">Nombre del producto</label>
             <input
               id="nombre"
               type="text"
-              className="inputBuscador"
+              className={styles.inputBuscador}
               placeholder="Ej: Leche 1L"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
             />
             {errores.nombre && (
-              <p style={{ color: "red", fontSize: "0.85rem", marginTop: "4px" }}>
+              <p className={styles.errorTexto}>
                 {errores.nombre}
               </p>
             )}
           </div>
 
-          <div style={{ marginBottom: "12px" }}>
+          <div className={styles.grupoInput}>
             <label htmlFor="precio">Precio ($)</label>
             <input
               id="precio"
               type="number"
-              className="inputBuscador"
+              className={styles.inputBuscador}
               placeholder="Ej: 1500"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}
               min="1"
             />
             {errores.precio && (
-              <p style={{ color: "red", fontSize: "0.85rem", marginTop: "4px" }}>
+              <p className={styles.errorTexto}>
                 {errores.precio}
               </p>
             )}
           </div>
 
-          <div style={{ marginBottom: "12px" }}>
+          <div className={styles.grupoInput}>
             <label htmlFor="cantidad">Cantidad en stock</label>
             <input
               id="cantidad"
               type="number"
-              className="inputBuscador"
+              className={styles.inputBuscador}
               placeholder="Ej: 50"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
               min="0"
             />
             {errores.cantidad && (
-              <p style={{ color: "red", fontSize: "0.85rem", marginTop: "4px" }}>
+              <p className={styles.errorTexto}>
                 {errores.cantidad}
               </p>
             )}
           </div>
 
-          <button type="submit" className="btnMini">
+          <button type="submit" className={styles.btnMini}>
             {productoEditando ? "Guardar Cambios" : "Agregar Producto"}
           </button>
           {productoEditando && onCancelar && (
             <button
               type="button"
-              className="btnMini"
+              className={styles.btnMini}
               style={{ marginLeft: "8px" }}
               onClick={onCancelar}
             >
@@ -172,7 +173,7 @@ export default function ProductoForm({
         </form>
 
         {exito && (
-          <p style={{ color: "green", marginTop: "12px", fontWeight: "bold" }}>
+          <p className={styles.exitoTexto}>
             {exito}
           </p>
         )}

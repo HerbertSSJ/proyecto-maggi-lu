@@ -7,10 +7,12 @@ import { Producto } from "@/types/Producto";
 import { obtenerProductos, guardarProductos } from "@/utils/inventarioStorage";
 import ProductoForm from "@/components/inventario/ProductoForm";
 import ProductoList from "@/components/inventario/ProductoList";
+import styles from "./inventario.module.css";
 
 export default function InventarioPage() {
-  const { usuario, cargando } = useAuth();
+  const { usuario, cargando, logout } = useAuth();
   const router = useRouter();
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [busqueda, setBusqueda] = useState<string>("");
@@ -27,7 +29,11 @@ export default function InventarioPage() {
   }, []);
 
   if (cargando) {
-    return <main className="contenido"><p>Cargando...</p></main>;
+    return (
+      <div className={styles.contenedor}>
+        <p style={{ padding: "20px", color: "#888" }}>Cargando...</p>
+      </div>
+    );
   }
 
   if (!usuario) return null;
@@ -53,7 +59,7 @@ export default function InventarioPage() {
         precio: datos.precio,
         cantidad: datos.cantidad,
         fechaCreacion: new Date().toLocaleDateString(),
-        responsable: "Administrador",
+        responsable: usuario ?? "Administrador",
       };
       listaActual.push(nuevoProducto);
     }
@@ -95,32 +101,63 @@ export default function InventarioPage() {
       );
 
   return (
-    <main className="contenido">
-      <h1 className="tituloSeccion">Inventario — MIMImarket</h1>
-      <ProductoForm
-        onAgregar={handleAgregar}
-        onActualizar={handleActualizarProducto}
-        onCancelar={handleCancelarEdicion}
-        productoEditando={productoEditando}
-      />
-      <div className="division" style={{ marginTop: "24px" }}>
-        <div className="caja">
-          <h2 className="tituloCaja">Buscar producto</h2>
-          <input
-            id="buscador-inventario"
-            type="text"
-            className="inputBuscador"
-            placeholder="Buscar producto..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+    <div className={styles.contenedor}>
+      <button
+        className={styles.btnHamburguesaDash}
+        onClick={() => setMenuAbierto(!menuAbierto)}
+      >
+        ☰
+      </button>
+
+      <nav className={`${styles.menuIzquierda} ${menuAbierto ? styles.menuActivo : ""}`}>
+        <h2 className={styles.menu}>
+          <img src="/Logo_MIMImarket-removebg-preview.png" alt="MIMImarket" />
+        </h2>
+        <ul className={styles.listaMenu}>
+          <li><a href="/inventario">Inventario</a></li>
+          <li><a href="/ventas">Caja Principal</a></li>
+          <li><a href="/historial">Historial</a></li>
+          <li><a href="/fiados">Fiados</a></li>
+        </ul>
+        <button className={styles.btnLogout} onClick={logout}>
+          Cerrar sesión
+        </button>
+      </nav>
+
+      <main className={`${styles.contenido} ${menuAbierto ? styles.moverDerecha : ""}`}>
+        <div className={styles.header}>
+          <h1>Inventario — {usuario}</h1>
+        </div>
+
+        <div className={styles.seccion}>
+          <ProductoForm
+            onAgregar={handleAgregar}
+            onActualizar={handleActualizarProducto}
+            onCancelar={handleCancelarEdicion}
+            productoEditando={productoEditando}
+          />
+
+          <div className={styles.division} style={{ marginTop: "24px" }}>
+            <div className={styles.caja}>
+              <h2 className={styles.tituloCaja}>Buscar producto</h2>
+              <input
+                id="buscador-inventario"
+                type="text"
+                className={styles.inputBuscador}
+                placeholder="Buscar producto..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <ProductoList
+            productos={productosFiltrados}
+            onEliminarProducto={handleEliminarProducto}
+            onEditarProducto={handleEditarProducto}
           />
         </div>
-      </div>
-      <ProductoList
-        productos={productosFiltrados}
-        onEliminarProducto={handleEliminarProducto}
-        onEditarProducto={handleEditarProducto}
-      />
-    </main>
+      </main>
+    </div>
   );
 }

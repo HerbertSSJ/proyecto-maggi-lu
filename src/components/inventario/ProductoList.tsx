@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Producto } from "@/types/Producto";
+import styles from "@/app/inventario/inventario.module.css";
 
 interface ProductoListProps {
   productos: Producto[];
@@ -23,10 +24,10 @@ export default function ProductoList({
   }
 
   return (
-    <div className="division" style={{ marginTop: "24px" }}>
-      <div className="caja">
-        <h2 className="tituloCaja">Listado de productos</h2>
-        <table className="tablaMini">
+    <div className={styles.division} style={{ marginTop: "24px" }}>
+      <div className={styles.caja}>
+        <h2 className={styles.tituloCaja}>Listado de productos</h2>
+        <table className={styles.tablaMini}>
           <thead>
             <tr>
               <th>Nombre</th>
@@ -53,18 +54,19 @@ export default function ProductoList({
                 <td style={{ display: "flex", gap: "8px" }}>
                   <Link
                     href={`/inventario/${producto.id}`}
-                    className="btnMini"
+                    className={styles.btnMini}
                   >
                     Ver detalle
                   </Link>
                   <button
-                    className="btnMini"
+                    className={styles.btnMini}
                     onClick={() => onEditarProducto(producto)}
                   >
                     Editar
                   </button>
                   <button
-                    className="btnMini"
+                    className={styles.btnMini}
+                    style={{ backgroundColor: "#dc3545" }}
                     onClick={() => onEliminarProducto(producto.id)}
                   >
                     Eliminar
