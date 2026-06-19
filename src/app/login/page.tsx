@@ -22,7 +22,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // Función para manejar el envío del formulario
-  function handleSubmit(e: any) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); // Prevenir recarga de página
 
     // Buscar si el usuario existe con la clave correcta

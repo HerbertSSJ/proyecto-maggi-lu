@@ -1,4 +1,4 @@
-import { Fiado } from "@/types/Fiado";
+import { Fiado } from "@/types/Fiados";
 
 const STORAGE_KEY = "listaDeudores";
 

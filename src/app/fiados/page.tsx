@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Fiado } from "@/types/Fiado";
+import { Fiado } from "@/types/Fiados";
 import {
   obtenerFiados,
   marcarComoPagado,

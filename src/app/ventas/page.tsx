@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Producto } from "@/types/Producto";
 import { Boleta, ItemCarrito } from "@/types/Boleta";
-import { Fiado } from "@/types/Fiado";
+import { Fiado } from "@/types/Fiados";
 import { obtenerProductos } from "@/utils/inventarioStorage";
 import { crearBoleta, obtenerSiguienteNumero } from "@/utils/boletaStorage";
 import { crearFiado } from "@/utils/fiadoStorage";
