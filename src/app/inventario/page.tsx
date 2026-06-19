@@ -8,6 +8,8 @@ import ProductoList from "@/components/inventario/ProductoList";
 
 export default function InventarioPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
+  const [busqueda, setBusqueda] = useState<string>("");
 
   useEffect(() => {
     const cargados = obtenerProductos();
@@ -53,13 +55,55 @@ export default function InventarioPage() {
     guardarProductos(listaActualizada);
   }
 
+  function handleEditarProducto(producto: Producto) {
+    setProductoEditando(producto);
+  }
+
+  function handleActualizarProducto(productoActualizado: Producto) {
+    const listaActualizada = productos.map((p) =>
+      p.id === productoActualizado.id ? productoActualizado : p
+    );
+    setProductos(listaActualizada);
+    guardarProductos(listaActualizada);
+    setProductoEditando(null);
+  }
+
+  function handleCancelarEdicion() {
+    setProductoEditando(null);
+  }
+
+  const productosFiltrados = busqueda.trim() === ""
+    ? productos
+    : productos.filter((p) =>
+        p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      );
+
   return (
     <main className="contenido">
       <h1 className="tituloSeccion">Inventario — MIMImarket</h1>
-      <ProductoForm onAgregar={handleAgregar} />
+      <ProductoForm
+        onAgregar={handleAgregar}
+        onActualizar={handleActualizarProducto}
+        onCancelar={handleCancelarEdicion}
+        productoEditando={productoEditando}
+      />
+      <div className="division" style={{ marginTop: "24px" }}>
+        <div className="caja">
+          <h2 className="tituloCaja">Buscar producto</h2>
+          <input
+            id="buscador-inventario"
+            type="text"
+            className="inputBuscador"
+            placeholder="Buscar producto..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+      </div>
       <ProductoList
-        productos={productos}
+        productos={productosFiltrados}
         onEliminarProducto={handleEliminarProducto}
+        onEditarProducto={handleEditarProducto}
       />
     </main>
   );
