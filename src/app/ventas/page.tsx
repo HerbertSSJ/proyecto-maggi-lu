@@ -6,32 +6,24 @@ import { useAuth } from "@/context/AuthContext";
 import { Producto } from "@/types/Producto";
 import { Boleta, ItemCarrito } from "@/types/Boleta";
 import { obtenerProductos } from "@/utils/inventarioStorage";
-import {
-  crearBoleta,
-  obtenerSiguienteNumero,
-} from "@/utils/boletaStorage";
+import { crearBoleta, obtenerSiguienteNumero } from "@/utils/boletaStorage";
 import styles from "./ventas.module.css";
 
 export default function VentasPage() {
   const { usuario, cargando, logout } = useAuth();
   const router = useRouter();
-
-  // Verificar autenticación
-  useEffect(() => {
-    if (!cargando && !usuario) {
-      router.push("/login");
-    }
-  }, [usuario, cargando]);
-
-  // Estados
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
-  const [boletas, setBoletas] = useState<Boleta[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
 
-  // Cargar datos al montar
+  useEffect(() => {
+    if (!cargando && !usuario) {
+      router.push("/login");
+    }
+  }, [usuario, cargando, router]);
+
   useEffect(() => {
     setProductos(obtenerProductos());
   }, []);
@@ -105,7 +97,6 @@ export default function VentasPage() {
     };
 
     crearBoleta(nuevaBoleta);
-    setBoletas([...boletas, nuevaBoleta]);
     setCarrito([]);
     setMetodoPago("");
     alert("Boleta creada: #" + nuevaBoleta.numero);
@@ -142,18 +133,13 @@ export default function VentasPage() {
             <a href="/inventario">Inventario</a>
           </li>
           <li>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuAbierto(false);
-              }}
-            >
-              Caja Principal
-            </a>
+            <a href="/ventas">Caja Principal</a>
           </li>
           <li>
             <a href="/historial">Historial</a>
+          </li>
+          <li>
+            <a href="/fiados">Fiados</a>
           </li>
         </ul>
 
@@ -181,7 +167,7 @@ export default function VentasPage() {
               className={styles.inputBuscador}
             />
 
-            <table border="1" className={styles.tablaMini}>
+            <table border={1} className={styles.tablaMini}>
               <thead>
                 <tr>
                   <th>Producto</th>
@@ -219,7 +205,7 @@ export default function VentasPage() {
               <p style={{ textAlign: "center", color: "#999" }}>Carrito vacío</p>
             ) : (
               <>
-                <table border="1" className={styles.tablaMini}>
+                <table border={1} className={styles.tablaMini}>
                   <thead>
                     <tr>
                       <th>Producto</th>

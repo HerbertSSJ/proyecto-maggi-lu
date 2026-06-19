@@ -98,6 +98,9 @@ export default function HistorialPage() {
               Historial
             </a>
           </li>
+          <li>
+            <a href="/fiados">Fiados</a>
+          </li>
         </ul>
 
         <button className={styles.btnLogout} onClick={logout}>
