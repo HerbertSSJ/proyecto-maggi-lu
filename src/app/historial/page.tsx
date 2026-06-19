@@ -12,6 +12,7 @@ export default function HistorialPage() {
   const router = useRouter();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [boletas, setBoletas] = useState<Boleta[]>([]);
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     if (!cargando && !usuario) {
@@ -36,6 +37,15 @@ export default function HistorialPage() {
     setBoletas(boletas.filter((b) => b.id !== id));
     alert("Boleta eliminada.");
   }
+
+  const boletasFiltradas = busqueda.trim() === ""
+    ? boletas
+    : boletas.filter(
+        (b) =>
+          b.cliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
+          b.numero?.toString().includes(busqueda) ||
+          b.id.toString().includes(busqueda)
+      );
 
   return (
     <div className={styles.contenedor}>
@@ -68,11 +78,22 @@ export default function HistorialPage() {
 
         <section className={styles.historialSeccion}>
           <h2>Todas las Boletas</h2>
+          
+          <div style={{ marginBottom: "20px" }}>
+            <input
+              type="text"
+              placeholder="Buscar por cliente o número de boleta..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className={styles.inputEdicion}
+              style={{ width: "100%", padding: "10px", fontSize: "16px" }}
+            />
+          </div>
 
-          {boletas.length === 0 ? (
-            <p className={styles.sinDatos}>No hay boletas registradas</p>
+          {boletasFiltradas.length === 0 ? (
+            <p className={styles.sinDatos}>No hay boletas que coincidan con la búsqueda</p>
           ) : (
-            boletas.map((boleta) => (
+            boletasFiltradas.map((boleta) => (
               <div key={boleta.id} className={styles.boletaCard}>
                 <div className={styles.boletaHeader}>
                   <div>

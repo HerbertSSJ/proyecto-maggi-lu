@@ -171,9 +171,8 @@ export default function DetalleBoleta() {
       ? `${editFecha.trim()}, ${editHora.trim()}`
       : editFecha.trim();
 
-    const boletaActualizada: Partial<Boleta> = {
-      numero: boleta.numero,
-      usuario: boleta.usuario,
+    const boletaActualizada: Boleta = {
+      ...boleta,
       fecha: fechaCompleta,
       cliente: editCliente.trim() || "Cliente sin nombre",
       metodo_pago: editMetodoPago,
