@@ -4,11 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Boleta } from "@/types/Boleta";
-import {
-  obtenerBoletas,
-  eliminarBoleta,
-  actualizarBoleta,
-} from "@/utils/boletaStorage";
+import { obtenerBoletas, eliminarBoleta } from "@/utils/boletaStorage";
 import styles from "./historial.module.css";
 
 export default function HistorialPage() {
@@ -16,58 +12,33 @@ export default function HistorialPage() {
   const router = useRouter();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [boletas, setBoletas] = useState<Boleta[]>([]);
-  const [editando, setEditando] = useState<number | null>(null);
-  const [metodoPagoEdit, setMetodoPagoEdit] = useState("");
 
-  // Verificar autenticación
   useEffect(() => {
     if (!cargando && !usuario) {
       router.push("/login");
     }
   }, [usuario, cargando]);
 
-  // Cargar boletas
   useEffect(() => {
     setBoletas(obtenerBoletas());
   }, []);
 
-  function eliminarBoleta_Func(id: number) {
-    if (confirm("¿Eliminar boleta?")) {
-      eliminarBoleta(id);
-      setBoletas(boletas.filter((b) => b.id !== id));
-      alert("Boleta eliminada");
-    }
+  function separarFechaHora(fechaCompleta: string) {
+    const partes = fechaCompleta.split(",");
+    const fecha = partes[0]?.trim() || fechaCompleta;
+    const hora = partes[1]?.trim() || "";
+    return { fecha, hora };
   }
 
-  function iniciarEdicion(boleta: Boleta) {
-    setEditando(boleta.id);
-    setMetodoPagoEdit(boleta.metodo_pago || "");
-  }
-
-  function guardarEdicion(id: number) {
-    if (!metodoPagoEdit) {
-      alert("Selecciona método de pago");
-      return;
-    }
-
-    const boletaActualizada = boletas.find((b) => b.id === id);
-    if (boletaActualizada) {
-      boletaActualizada.metodo_pago = metodoPagoEdit;
-      actualizarBoleta(id, boletaActualizada);
-      setBoletas([...boletas]);
-      setEditando(null);
-      alert("Boleta actualizada");
-    }
-  }
-
-  function cancelarEdicion() {
-    setEditando(null);
-    setMetodoPagoEdit("");
+  function handleEliminar(id: number) {
+    if (!confirm("¿Eliminar esta boleta?")) return;
+    eliminarBoleta(id);
+    setBoletas(boletas.filter((b) => b.id !== id));
+    alert("Boleta eliminada.");
   }
 
   return (
     <div className={styles.contenedor}>
-      {/* MENÚ LATERAL */}
       <button
         className={styles.btnHamburguesaDash}
         onClick={() => setMenuAbierto(!menuAbierto)}
@@ -79,36 +50,17 @@ export default function HistorialPage() {
         <h2 className={styles.menu}>
           <img src="/Logo_MIMImarket-removebg-preview.png" alt="MIMImarket" />
         </h2>
-
         <ul className={styles.listaMenu}>
-          <li>
-            <a href="/inventario">Inventario</a>
-          </li>
-          <li>
-            <a href="/ventas">Caja Principal</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuAbierto(false);
-              }}
-            >
-              Historial
-            </a>
-          </li>
-          <li>
-            <a href="/fiados">Fiados</a>
-          </li>
+          <li><a href="/inventario">Inventario</a></li>
+          <li><a href="/ventas">Caja Principal</a></li>
+          <li><a href="/historial">Historial</a></li>
+          <li><a href="/fiados">Fiados</a></li>
         </ul>
-
         <button className={styles.btnLogout} onClick={logout}>
           Cerrar sesión
         </button>
       </nav>
 
-      {/* ÁREA PRINCIPAL */}
       <main className={`${styles.contenido} ${menuAbierto ? styles.moverDerecha : ""}`}>
         <div className={styles.header}>
           <h1>Historial de Boletas - {usuario}</h1>
@@ -124,95 +76,32 @@ export default function HistorialPage() {
               <div key={boleta.id} className={styles.boletaCard}>
                 <div className={styles.boletaHeader}>
                   <div>
-                    <h3>Boleta #{boleta.numero}</h3>
+                    <h3>Boleta #{boleta.numero || boleta.id}</h3>
                     <p className={styles.info}>
-                      <strong>Fecha:</strong> {boleta.fecha}
+                      <strong>Fecha:</strong> {separarFechaHora(boleta.fecha).fecha}
                     </p>
                     <p className={styles.info}>
-                      <strong>Usuario:</strong> {boleta.usuario}
+                      <strong>Hora:</strong> {separarFechaHora(boleta.fecha).hora || "No registrada"}
+                    </p>
+                    <p className={styles.info}>
+                      <strong>Cliente:</strong> {boleta.cliente || "Sin nombre"}
                     </p>
                   </div>
                   <div className={styles.boletaAcciones}>
-                    {editando === boleta.id ? (
-                      <>
-                        <button
-                          className={styles.btnGuardar}
-                          onClick={() => guardarEdicion(boleta.id)}
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          className={styles.btnCancelar}
-                          onClick={cancelarEdicion}
-                        >
-                          Cancelar
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className={styles.btnEditar}
-                          onClick={() => iniciarEdicion(boleta)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className={styles.btnEliminar}
-                          onClick={() => eliminarBoleta_Func(boleta.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </>
-                    )}
+                    <button
+                      className={styles.btnEditar}
+                      style={{ backgroundColor: "#0066cc" }}
+                      onClick={() => router.push(`/historial/${boleta.id}`)}
+                    >
+                      Ver detalle
+                    </button>
+                    <button
+                      className={styles.btnEliminar}
+                      onClick={() => handleEliminar(boleta.id)}
+                    >
+                      Eliminar
+                    </button>
                   </div>
-                </div>
-
-                {/* ITEMS DE LA BOLETA */}
-                <table className={styles.tablaMini}>
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Precio</th>
-                      <th>Cantidad</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {boleta.items.map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{item.nombre}</td>
-                        <td>${item.precio}</td>
-                        <td>{item.cantidad}</td>
-                        <td>${item.subtotal.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* TOTAL Y MÉTODO DE PAGO */}
-                <div className={styles.boletaFooter}>
-                  <p className={styles.total}>
-                    <strong>Total:</strong> ${boleta.total.toFixed(2)}
-                  </p>
-
-                  {editando === boleta.id ? (
-                    <div className={styles.metodoPagoEdit}>
-                      <label>Método de Pago:</label>
-                      <select
-                        value={metodoPagoEdit}
-                        onChange={(e) => setMetodoPagoEdit(e.target.value)}
-                      >
-                        <option value="">Selecciona...</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Tarjeta">Tarjeta</option>
-                        <option value="Fiado">Fiado</option>
-                      </select>
-                    </div>
-                  ) : (
-                    <p className={styles.info}>
-                      <strong>Método de Pago:</strong> {boleta.metodo_pago || "No especificado"}
-                    </p>
-                  )}
                 </div>
               </div>
             ))
