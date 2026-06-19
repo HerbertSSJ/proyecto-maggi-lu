@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Producto } from "@/types/Producto";
 
 interface ProductoListProps {
@@ -50,6 +51,12 @@ export default function ProductoList({
                 <td>{producto.fechaCreacion}</td>
                 <td>{producto.responsable}</td>
                 <td style={{ display: "flex", gap: "8px" }}>
+                  <Link
+                    href={`/inventario/${producto.id}`}
+                    className="btnMini"
+                  >
+                    Ver detalle
+                  </Link>
                   <button
                     className="btnMini"
                     onClick={() => onEditarProducto(producto)}
