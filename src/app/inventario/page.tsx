@@ -1,20 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Producto } from "@/types/Producto";
 import { obtenerProductos, guardarProductos } from "@/utils/inventarioStorage";
 import ProductoForm from "@/components/inventario/ProductoForm";
 import ProductoList from "@/components/inventario/ProductoList";
 
 export default function InventarioPage() {
+  const { usuario, cargando } = useAuth();
+  const router = useRouter();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [busqueda, setBusqueda] = useState<string>("");
 
   useEffect(() => {
+    if (!cargando && !usuario) {
+      router.push("/login");
+    }
+  }, [usuario, cargando, router]);
+
+  useEffect(() => {
     const cargados = obtenerProductos();
     setProductos(cargados);
   }, []);
+
+  if (cargando) {
+    return <main className="contenido"><p>Cargando...</p></main>;
+  }
+
+  if (!usuario) return null;
 
   function handleAgregar(
     datos: Omit<Producto, "id" | "fechaCreacion" | "responsable">
