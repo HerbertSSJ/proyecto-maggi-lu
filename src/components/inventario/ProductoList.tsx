@@ -5,11 +5,13 @@ import { Producto } from "@/types/Producto";
 interface ProductoListProps {
   productos: Producto[];
   onEliminarProducto: (id: number) => void;
+  onEditarProducto: (producto: Producto) => void;
 }
 
 export default function ProductoList({
   productos,
   onEliminarProducto,
+  onEditarProducto,
 }: ProductoListProps) {
   if (productos.length === 0) {
     return (
@@ -47,7 +49,13 @@ export default function ProductoList({
                 <td>{producto.cantidad}</td>
                 <td>{producto.fechaCreacion}</td>
                 <td>{producto.responsable}</td>
-                <td>
+                <td style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    className="btnMini"
+                    onClick={() => onEditarProducto(producto)}
+                  >
+                    Editar
+                  </button>
                   <button
                     className="btnMini"
                     onClick={() => onEliminarProducto(producto.id)}
