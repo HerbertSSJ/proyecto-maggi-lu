@@ -6,10 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Fiado } from "@/types/Fiado";
 import {
   obtenerFiados,
-  crearFiado,
   marcarComoPagado,
-  eliminarFiado,
-  editarCliente,
 } from "@/utils/fiadoStorage";
 import { crearBoleta, obtenerSiguienteNumero } from "@/utils/boletaStorage";
 import styles from "./fiados.module.css";
@@ -19,8 +16,8 @@ export default function FiadosPage() {
   const router = useRouter();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [fiados, setFiados] = useState<Fiado[]>([]);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [fiadoPagando, setFiadoPagando] = useState<Fiado | null>(null);
+  const [metodoPagoFiado, setMetodoPagoFiado] = useState("");
 
   useEffect(() => {
     if (!cargando && !usuario) {
@@ -32,52 +29,43 @@ export default function FiadosPage() {
     setFiados(obtenerFiados());
   }, []);
 
-  function handleMarcarPagado(fiado: Fiado) {
-    if (!confirm(`¿Confirmar pago de $${fiado.totalDeuda} de ${fiado.cliente}?`)) return;
+  function iniciarPago(fiado: Fiado) {
+    setFiadoPagando(fiado);
+    setMetodoPagoFiado("");
+  }
+
+  function confirmarPago() {
+    if (!fiadoPagando) return;
+
+    if (!metodoPagoFiado) {
+      alert("Debe seleccionar un método de pago.");
+      return;
+    }
+
+    if (!confirm(`¿Confirmar pago de $${fiadoPagando.totalDeuda} de ${fiadoPagando.cliente}?`)) return;
 
     const boleta = {
       id: Date.now(),
       numero: obtenerSiguienteNumero(),
       fecha: new Date().toLocaleDateString("es-CL"),
       usuario: usuario || "Desconocido",
-      items: fiado.productos,
-      total: fiado.totalDeuda,
-      metodo_pago: `Fiado pagado por ${fiado.cliente}`,
+      cliente: fiadoPagando.cliente,
+      items: fiadoPagando.productos,
+      total: fiadoPagando.totalDeuda,
+      metodo_pago: metodoPagoFiado,
     };
 
     crearBoleta(boleta);
-    marcarComoPagado(fiado.id);
-    setFiados(obtenerFiados());
+    marcarComoPagado(fiadoPagando.id);
+    setFiadoPagando(null);
+    setMetodoPagoFiado("");
     alert(`Pago registrado. Boleta #${boleta.numero} creada.`);
+    router.push("/historial");
   }
 
-  function handleEliminar(id: number) {
-    if (!confirm("¿Eliminar este fiado?")) return;
-    eliminarFiado(id);
-    setFiados(fiados.filter((f) => f.id !== id));
-    alert("Fiado eliminado");
-  }
-
-  function iniciarEdicion(fiado: Fiado) {
-    setEditandoId(fiado.id);
-    setNuevoNombre(fiado.cliente);
-  }
-
-  function guardarEdicion(id: number) {
-    if (!nuevoNombre.trim()) {
-      alert("El nombre no puede estar vacío");
-      return;
-    }
-    editarCliente(id, nuevoNombre.trim());
-    setFiados(obtenerFiados());
-    setEditandoId(null);
-    setNuevoNombre("");
-    alert("Cliente actualizado");
-  }
-
-  function cancelarEdicion() {
-    setEditandoId(null);
-    setNuevoNombre("");
+  function cancelarPago() {
+    setFiadoPagando(null);
+    setMetodoPagoFiado("");
   }
 
   const fiadosPendientes = fiados.filter((f) => !f.pagado);
@@ -87,8 +75,6 @@ export default function FiadosPage() {
 
   return (
     <div className={styles.contenedor}>
-
-      {/* BOTÓN HAMBURGUESA - solo visible en móvil */}
       <button
         className={styles.btnHamburguesaDash}
         onClick={() => setMenuAbierto(!menuAbierto)}
@@ -96,7 +82,6 @@ export default function FiadosPage() {
         ☰
       </button>
 
-      {/* MENÚ LATERAL - siempre visible en desktop */}
       <nav className={`${styles.menuIzquierda} ${menuAbierto ? styles.menuActivo : ""}`}>
         <h2 className={styles.menu}>
           <img src="/Logo_MIMImarket-removebg-preview.png" alt="MIMImarket" />
@@ -112,15 +97,46 @@ export default function FiadosPage() {
         </button>
       </nav>
 
-      {/* ÁREA PRINCIPAL */}
       <main className={`${styles.contenido} ${menuAbierto ? styles.moverDerecha : ""}`}>
         <div className={styles.header}>
           <h1>Gestión de Fiados - {usuario}</h1>
         </div>
 
+        {fiadoPagando && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <h2>Registrar Pago</h2>
+              <p><strong>Cliente:</strong> {fiadoPagando.cliente}</p>
+              <p><strong>Total a cobrar:</strong> ${fiadoPagando.totalDeuda}</p>
+              <p><strong>Selecciona método de pago:</strong></p>
+              <div className={styles.botonesMetodo}>
+                <button
+                  className={`${styles.btnMetodo} ${metodoPagoFiado === "Efectivo" ? styles.btnMetodoActivo : ""}`}
+                  onClick={() => setMetodoPagoFiado("Efectivo")}
+                >
+                  Efectivo
+                </button>
+                <button
+                  className={`${styles.btnMetodo} ${metodoPagoFiado === "Tarjeta" ? styles.btnMetodoActivo : ""}`}
+                  onClick={() => setMetodoPagoFiado("Tarjeta")}
+                >
+                  Tarjeta
+                </button>
+              </div>
+              <div className={styles.botonesModal}>
+                <button className={styles.btnCancelar} onClick={cancelarPago}>
+                  Cancelar
+                </button>
+                <button className={styles.btnPagar} onClick={confirmarPago}>
+                  Confirmar Pago
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className={styles.seccion}>
           <h2>Fiados Pendientes ({fiadosPendientes.length})</h2>
-
           {fiadosPendientes.length === 0 ? (
             <p className={styles.sinDatos}>No hay fiados pendientes</p>
           ) : (
@@ -128,43 +144,19 @@ export default function FiadosPage() {
               <div key={fiado.id} className={styles.fiadoCard}>
                 <div className={styles.fiadoHeader}>
                   <div>
-                    {editandoId === fiado.id ? (
-                      <div className={styles.editNombre}>
-                        <input
-                          type="text"
-                          value={nuevoNombre}
-                          onChange={(e) => setNuevoNombre(e.target.value)}
-                          className={styles.inputEditar}
-                        />
-                        <button className={styles.btnGuardar} onClick={() => guardarEdicion(fiado.id)}>
-                          Guardar
-                        </button>
-                        <button className={styles.btnCancelar} onClick={cancelarEdicion}>
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <h3>Cliente: {fiado.cliente}</h3>
-                    )}
+                    <h3 className={styles.fiadoTitulo}>Cliente: {fiado.cliente}</h3>
                     <p className={styles.info}><strong>Fecha:</strong> {fiado.fechaInicial}</p>
                     <p className={styles.info}><strong>Vendedor:</strong> {fiado.vendedor}</p>
                   </div>
-
                   <div className={styles.acciones}>
-                    {editandoId !== fiado.id && (
-                      <button className={styles.btnEditar} onClick={() => iniciarEdicion(fiado)}>
-                        Editar cliente
-                      </button>
-                    )}
-                    <button className={styles.btnPagar} onClick={() => handleMarcarPagado(fiado)}>
+                    <button
+                      className={styles.btnPagar}
+                      onClick={() => iniciarPago(fiado)}
+                    >
                       Marcar pagado
-                    </button>
-                    <button className={styles.btnEliminar} onClick={() => handleEliminar(fiado.id)}>
-                      Eliminar
                     </button>
                   </div>
                 </div>
-
                 <table className={styles.tablaMini}>
                   <thead>
                     <tr>
@@ -185,7 +177,6 @@ export default function FiadosPage() {
                     ))}
                   </tbody>
                 </table>
-
                 <div className={styles.fiadoFooter}>
                   <p className={styles.total}><strong>Total deuda: ${fiado.totalDeuda}</strong></p>
                 </div>
@@ -199,12 +190,9 @@ export default function FiadosPage() {
             <h2>Fiados Pagados ({fiadosPagados.length})</h2>
             {fiadosPagados.map((fiado) => (
               <div key={fiado.id} className={`${styles.fiadoCard} ${styles.pagado}`}>
-                <h3>Cliente: {fiado.cliente}</h3>
+                <h3 className={styles.fiadoTitulo}>Cliente: {fiado.cliente}</h3>
                 <p className={styles.info}><strong>Fecha:</strong> {fiado.fechaInicial}</p>
-                <p className={styles.info}><strong>Total pagado: ${fiado.totalDeuda}</strong></p>
-                <button className={styles.btnEliminar} onClick={() => handleEliminar(fiado.id)}>
-                  Eliminar registro
-                </button>
+                <p className={styles.info}><strong>Total pagado:</strong> ${fiado.totalDeuda}</p>
               </div>
             ))}
           </section>

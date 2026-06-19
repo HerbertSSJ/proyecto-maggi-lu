@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Producto } from "@/types/Producto";
 import { Boleta, ItemCarrito } from "@/types/Boleta";
+import { Fiado } from "@/types/Fiado";
 import { obtenerProductos } from "@/utils/inventarioStorage";
 import { crearBoleta, obtenerSiguienteNumero } from "@/utils/boletaStorage";
+import { crearFiado } from "@/utils/fiadoStorage";
 import styles from "./ventas.module.css";
 
 export default function VentasPage() {
@@ -28,7 +30,6 @@ export default function VentasPage() {
     setProductos(obtenerProductos());
   }, []);
 
-  // Funciones del carrito
   function agregarAlCarrito(producto: Producto) {
     if (producto.cantidad <= 0) {
       alert("Sin stock");
@@ -76,33 +77,65 @@ export default function VentasPage() {
 
   function finalizarBoleta() {
     if (carrito.length === 0) {
-      alert("Carrito vacío");
+      alert("No hay productos en la boleta.");
       return;
     }
 
     if (!metodoPago) {
-      alert("Selecciona método de pago");
+      alert("Debe seleccionar un método de pago.");
       return;
     }
 
     const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalRedondeado = Math.round(total * 100) / 100;
+
+    if (metodoPago === "Fiado") {
+      const nombreClienteRaw = prompt("Ingrese el nombre del cliente para el fiado:");
+      const nombreCliente =
+        !nombreClienteRaw || nombreClienteRaw.trim() === ""
+          ? "Cliente sin nombre"
+          : nombreClienteRaw.trim();
+
+      const nuevoFiado: Fiado = {
+        id: Date.now(),
+        cliente: nombreCliente,
+        fechaInicial: new Date().toLocaleString("es-CL"),
+        totalDeuda: totalRedondeado,
+        productos: carrito,
+        vendedor: usuario || "Desconocido",
+        pagado: false,
+      };
+
+      crearFiado(nuevoFiado);
+      setCarrito([]);
+      setMetodoPago("");
+      alert("Fiado registrado a nombre de: " + nombreCliente);
+      router.push("/fiados");
+      return;
+    }
+
+    const nombreClienteRaw = prompt("Ingrese el nombre del cliente (opcional):");
+    const nombreCliente =
+      !nombreClienteRaw || nombreClienteRaw.trim() === ""
+        ? "Cliente sin nombre"
+        : nombreClienteRaw.trim();
+
     const nuevaBoleta: Boleta = {
       id: Date.now(),
       numero: obtenerSiguienteNumero(),
-      fecha: new Date().toLocaleDateString("es-CL"),
+      fecha: new Date().toLocaleString("es-CL"),
       usuario: usuario || "Desconocido",
+      cliente: nombreCliente,
       items: carrito,
-      total: Math.round(total * 100) / 100,
+      total: totalRedondeado,
       metodo_pago: metodoPago,
     };
 
     crearBoleta(nuevaBoleta);
     setCarrito([]);
     setMetodoPago("");
-    alert("Boleta creada: #" + nuevaBoleta.numero);
+    alert("Boleta #" + nuevaBoleta.numero + " creada para: " + nombreCliente);
   }
-
-
 
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -114,7 +147,6 @@ export default function VentasPage() {
 
   return (
     <div className={styles.contenedor}>
-      {/* MENÚ HAMBURGUESA */}
       <button
         className={styles.btnHamburguesaDash}
         onClick={() => setMenuAbierto(!menuAbierto)}
@@ -122,43 +154,29 @@ export default function VentasPage() {
         ☰
       </button>
 
-      {/* MENÚ LATERAL */}
       <nav className={`${styles.menuIzquierda} ${menuAbierto ? styles.menuActivo : ""}`}>
         <h2 className={styles.menu}>
           <img src="/Logo_MIMImarket-removebg-preview.png" alt="MIMImarket" />
         </h2>
-
         <ul className={styles.listaMenu}>
-          <li>
-            <a href="/inventario">Inventario</a>
-          </li>
-          <li>
-            <a href="/ventas">Caja Principal</a>
-          </li>
-          <li>
-            <a href="/historial">Historial</a>
-          </li>
-          <li>
-            <a href="/fiados">Fiados</a>
-          </li>
+          <li><a href="/inventario">Inventario</a></li>
+          <li><a href="/ventas">Caja Principal</a></li>
+          <li><a href="/historial">Historial</a></li>
+          <li><a href="/fiados">Fiados</a></li>
         </ul>
-
         <button className={styles.btnLogout} onClick={logout}>
           Cerrar sesión
         </button>
       </nav>
 
-      {/* ÁREA PRINCIPAL */}
       <main className={`${styles.contenido} ${menuAbierto ? styles.moverDerecha : ""}`}>
         <div className={styles.header}>
           <h1>Gestión de Ventas - {usuario}</h1>
         </div>
 
         <div className={styles.division}>
-          {/* COLUMNA IZQUIERDA: CAJA */}
           <div className={styles.caja}>
             <h2 className={styles.tituloCaja}>Catálogo Rápido</h2>
-
             <input
               type="text"
               placeholder="Buscar Producto"
@@ -166,7 +184,6 @@ export default function VentasPage() {
               onChange={(e) => setBusqueda(e.target.value)}
               className={styles.inputBuscador}
             />
-
             <table border={1} className={styles.tablaMini}>
               <thead>
                 <tr>
@@ -197,7 +214,6 @@ export default function VentasPage() {
             </table>
           </div>
 
-          {/* COLUMNA DERECHA: BOLETA */}
           <div className={styles.caja}>
             <h2 className={styles.tituloCaja}>Boleta del Cliente</h2>
 
@@ -242,37 +258,22 @@ export default function VentasPage() {
                 </h3>
 
                 <div className={styles.botonesMetodo}>
-                  <button
-                    className={styles.btnMetodo}
-                    onClick={() => setMetodoPago("Efectivo")}
-                  >
+                  <button className={styles.btnMetodo} onClick={() => setMetodoPago("Efectivo")}>
                     Efectivo
                   </button>
-                  <button
-                    className={styles.btnMetodo}
-                    onClick={() => setMetodoPago("Tarjeta")}
-                  >
+                  <button className={styles.btnMetodo} onClick={() => setMetodoPago("Tarjeta")}>
                     Tarjeta
                   </button>
-                  <button
-                    className={styles.btnMetodo}
-                    onClick={() => setMetodoPago("Fiado")}
-                  >
+                  <button className={styles.btnMetodo} onClick={() => setMetodoPago("Fiado")}>
                     Fiado
                   </button>
                 </div>
 
                 <div className={styles.botonesCarrito}>
-                  <button
-                    className={styles.btnVaciar}
-                    onClick={vaciarCarrito}
-                  >
+                  <button className={styles.btnVaciar} onClick={vaciarCarrito}>
                     Vaciar Boleta
                   </button>
-                  <button
-                    className={styles.btnFinalizar}
-                    onClick={finalizarBoleta}
-                  >
+                  <button className={styles.btnFinalizar} onClick={finalizarBoleta}>
                     Finalizar Venta
                   </button>
                 </div>
