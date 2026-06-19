@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Producto } from "@/types/Producto";
 import { obtenerProductos, guardarProductos } from "@/utils/inventarioStorage";
 import ProductoForm from "@/components/inventario/ProductoForm";
+import ProductoList from "@/components/inventario/ProductoList";
 
 export default function InventarioPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -22,14 +23,12 @@ export default function InventarioPage() {
     );
 
     if (indiceExistente !== -1) {
-      // Si el producto ya existe: sumar cantidad y actualizar precio
       listaActual[indiceExistente] = {
         ...listaActual[indiceExistente],
         cantidad: listaActual[indiceExistente].cantidad + datos.cantidad,
         precio: datos.precio,
       };
     } else {
-      // Si no existe: crear nuevo producto
       const nuevoProducto: Producto = {
         id: Date.now(),
         nombre: datos.nombre,
@@ -45,13 +44,23 @@ export default function InventarioPage() {
     guardarProductos(listaActual);
   }
 
+  function handleEliminarProducto(id: number) {
+    const confirmar = confirm("¿Estás seguro de que deseas eliminar este producto?");
+    if (!confirmar) return;
+
+    const listaActualizada = productos.filter((p) => p.id !== id);
+    setProductos(listaActualizada);
+    guardarProductos(listaActualizada);
+  }
+
   return (
     <main className="contenido">
       <h1 className="tituloSeccion">Inventario — MIMImarket</h1>
       <ProductoForm onAgregar={handleAgregar} />
-      <p style={{ marginTop: "16px", color: "#555" }}>
-        Productos en inventario: {productos.length}
-      </p>
+      <ProductoList
+        productos={productos}
+        onEliminarProducto={handleEliminarProducto}
+      />
     </main>
   );
 }
