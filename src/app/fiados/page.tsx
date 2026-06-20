@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Fiado } from "@/types/Fiados";
+import { Fiado } from "@/types/Fiado";
 import {
   obtenerFiados,
   marcarComoPagado,
@@ -44,10 +44,11 @@ export default function FiadosPage() {
 
     if (!confirm(`¿Confirmar pago de $${fiadoPagando.totalDeuda} de ${fiadoPagando.cliente}?`)) return;
 
+    // La boleta usa la fecha y hora ACTUAL del pago, no la del fiado
     const boleta = {
       id: Date.now(),
       numero: obtenerSiguienteNumero(),
-      fecha: new Date().toLocaleDateString("es-CL"),
+      fecha: new Date().toLocaleString("es-CL"),
       usuario: usuario || "Desconocido",
       cliente: fiadoPagando.cliente,
       items: fiadoPagando.productos,
@@ -66,6 +67,13 @@ export default function FiadosPage() {
   function cancelarPago() {
     setFiadoPagando(null);
     setMetodoPagoFiado("");
+  }
+
+  function separarFechaHora(fechaCompleta: string) {
+    const partes = fechaCompleta.split(",");
+    const fecha = partes[0]?.trim() || fechaCompleta;
+    const hora = partes[1]?.trim() || "";
+    return { fecha, hora };
   }
 
   const fiadosPendientes = fiados.filter((f) => !f.pagado);
@@ -108,6 +116,8 @@ export default function FiadosPage() {
               <h2>Registrar Pago</h2>
               <p><strong>Cliente:</strong> {fiadoPagando.cliente}</p>
               <p><strong>Total a cobrar:</strong> ${fiadoPagando.totalDeuda}</p>
+              <p><strong>Fecha del fiado:</strong> {separarFechaHora(fiadoPagando.fechaInicial).fecha}</p>
+              <p><strong>Hora del fiado:</strong> {separarFechaHora(fiadoPagando.fechaInicial).hora || "No registrada"}</p>
               <p><strong>Selecciona método de pago:</strong></p>
               <div className={styles.botonesMetodo}>
                 <button
@@ -140,12 +150,13 @@ export default function FiadosPage() {
           {fiadosPendientes.length === 0 ? (
             <p className={styles.sinDatos}>No hay fiados pendientes</p>
           ) : (
-            fiadosPendientes.map((fiado) => (
-              <div key={fiado.id} className={styles.fiadoCard}>
+            fiadosPendientes.map((fiado, index) => (
+              <div key={`${fiado.id}-${index}`} className={styles.fiadoCard}>
                 <div className={styles.fiadoHeader}>
                   <div>
                     <h3 className={styles.fiadoTitulo}>Cliente: {fiado.cliente}</h3>
-                    <p className={styles.info}><strong>Fecha:</strong> {fiado.fechaInicial}</p>
+                    <p className={styles.info}><strong>Fecha del fiado:</strong> {separarFechaHora(fiado.fechaInicial).fecha}</p>
+                    <p className={styles.info}><strong>Hora del fiado:</strong> {separarFechaHora(fiado.fechaInicial).hora || "No registrada"}</p>
                     <p className={styles.info}><strong>Vendedor:</strong> {fiado.vendedor}</p>
                   </div>
                   <div className={styles.acciones}>
@@ -188,10 +199,11 @@ export default function FiadosPage() {
         {fiadosPagados.length > 0 && (
           <section className={styles.seccion}>
             <h2>Fiados Pagados ({fiadosPagados.length})</h2>
-            {fiadosPagados.map((fiado) => (
-              <div key={fiado.id} className={`${styles.fiadoCard} ${styles.pagado}`}>
+            {fiadosPagados.map((fiado, index) => (
+              <div key={`${fiado.id}-${index}`} className={`${styles.fiadoCard}`}>
                 <h3 className={styles.fiadoTitulo}>Cliente: {fiado.cliente}</h3>
-                <p className={styles.info}><strong>Fecha:</strong> {fiado.fechaInicial}</p>
+                <p className={styles.info}><strong>Fecha del fiado:</strong> {separarFechaHora(fiado.fechaInicial).fecha}</p>
+                <p className={styles.info}><strong>Hora del fiado:</strong> {separarFechaHora(fiado.fechaInicial).hora || "No registrada"}</p>
                 <p className={styles.info}><strong>Total pagado:</strong> ${fiado.totalDeuda}</p>
               </div>
             ))}
