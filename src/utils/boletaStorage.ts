@@ -3,10 +3,8 @@ import { Boleta } from "@/types/Boleta";
 const STORAGE_KEY = "boletasMimi";
 const COUNTER_KEY = "boletasContador";
 
-// CREATE - Obtener todas las boletas
 export function obtenerBoletas(): Boleta[] {
   if (typeof window === "undefined") return [];
-
   try {
     const datos = localStorage.getItem(STORAGE_KEY);
     if (!datos) return [];
@@ -17,16 +15,13 @@ export function obtenerBoletas(): Boleta[] {
   }
 }
 
-// Guardar boletas en localStorage
 function guardarBoletas(boletas: Boleta[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(boletas));
 }
 
-// Obtener siguiente número secuencial
 export function obtenerSiguienteNumero(): number {
   if (typeof window === "undefined") return 1;
-
   try {
     const contador = localStorage.getItem(COUNTER_KEY);
     const numero = contador ? parseInt(contador, 10) + 1 : 1;
@@ -37,7 +32,6 @@ export function obtenerSiguienteNumero(): number {
   }
 }
 
-// CREATE - Crear nueva boleta
 export function crearBoleta(boleta: Boleta): Boleta {
   const boletas = obtenerBoletas();
   boletas.push(boleta);
@@ -45,25 +39,23 @@ export function crearBoleta(boleta: Boleta): Boleta {
   return boleta;
 }
 
-// READ - Obtener una boleta por ID
 export function obtenerBoletaPorId(id: number): Boleta | null {
   const boletas = obtenerBoletas();
   return boletas.find((b) => b.id === id) || null;
 }
 
-// UPDATE - Actualizar una boleta
-export function actualizarBoleta(id: number, boletaActualizada: Boleta): Boleta | null {
+export function actualizarBoleta(id: number, cambios: Partial<Boleta>): Boleta | null {
   const boletas = obtenerBoletas();
   const indice = boletas.findIndex((b) => b.id === id);
 
   if (indice === -1) return null;
 
-  boletas[indice] = boletaActualizada;
+  // Fusionar campos existentes con los cambios — no reemplazar todo
+  boletas[indice] = { ...boletas[indice], ...cambios, id };
   guardarBoletas(boletas);
   return boletas[indice];
 }
 
-// DELETE - Eliminar una boleta
 export function eliminarBoleta(id: number): boolean {
   const boletas = obtenerBoletas();
   const indice = boletas.findIndex((b) => b.id === id);

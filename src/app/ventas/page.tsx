@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Producto } from "@/types/Producto";
 import { Boleta, ItemCarrito } from "@/types/Boleta";
-import { Fiado } from "@/types/Fiados";
-import { obtenerProductos } from "@/utils/inventarioStorage";
+import { Fiado } from "@/types/Fiado";
+import { obtenerProductos, guardarProductos } from "@/utils/inventarioStorage";
 import { crearBoleta, obtenerSiguienteNumero } from "@/utils/boletaStorage";
 import { crearFiado } from "@/utils/fiadoStorage";
 import styles from "./ventas.module.css";
@@ -36,13 +36,15 @@ export default function VentasPage() {
       return;
     }
 
+    const productosActualizados = productos.map((p) =>
+      p.id === producto.id ? { ...p, cantidad: p.cantidad - 1 } : p
+    );
+    setProductos(productosActualizados);
+    guardarProductos(productosActualizados);
+
     const existe = carrito.find((item) => item.id === producto.id);
 
     if (existe) {
-      if (existe.cantidad >= producto.cantidad) {
-        alert("No hay más stock");
-        return;
-      }
       const nuevoCarrito = carrito.map((item) =>
         item.id === producto.id
           ? {
@@ -68,10 +70,31 @@ export default function VentasPage() {
   }
 
   function eliminarDelCarrito(id: number) {
+    const itemCarrito = carrito.find((item) => item.id === id);
+    if (!itemCarrito) return;
+
+    const productosActualizados = productos.map((p) =>
+      p.id === id ? { ...p, cantidad: p.cantidad + itemCarrito.cantidad } : p
+    );
+    setProductos(productosActualizados);
+    guardarProductos(productosActualizados);
+
     setCarrito(carrito.filter((item) => item.id !== id));
   }
 
   function vaciarCarrito() {
+    const productosActualizados = [...productos];
+    carrito.forEach((item) => {
+      const idx = productosActualizados.findIndex((p) => p.id === item.id);
+      if (idx !== -1) {
+        productosActualizados[idx] = {
+          ...productosActualizados[idx],
+          cantidad: productosActualizados[idx].cantidad + item.cantidad,
+        };
+      }
+    });
+    setProductos(productosActualizados);
+    guardarProductos(productosActualizados);
     setCarrito([]);
   }
 

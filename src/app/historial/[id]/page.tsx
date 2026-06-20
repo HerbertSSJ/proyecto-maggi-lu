@@ -8,7 +8,8 @@ import { obtenerBoletas, actualizarBoleta } from "@/utils/boletaStorage";
 import styles from "../historial.module.css";
 
 export default function DetalleBoleta() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = Array.isArray(params.id) ? Number(params.id[0]) : Number(params.id);
   const { usuario, cargando, logout } = useAuth();
   const router = useRouter();
   const [boleta, setBoleta] = useState<Boleta | null>(null);
@@ -16,7 +17,8 @@ export default function DetalleBoleta() {
   const [editando, setEditando] = useState(false);
 
   const [editFecha, setEditFecha] = useState("");
-  const [editHora, setEditHora] = useState("");
+  const [editHoraTexto, setEditHoraTexto] = useState("");
+  const [editAmPm, setEditAmPm] = useState("a. m.");
   const [editCliente, setEditCliente] = useState("");
   const [editMetodoPago, setEditMetodoPago] = useState("");
   const [editItems, setEditItems] = useState<ItemCarrito[]>([]);
@@ -33,25 +35,34 @@ export default function DetalleBoleta() {
   }, [usuario, cargando]);
 
   useEffect(() => {
-    const boletas = obtenerBoletas();
-    const encontrada = boletas.find((b) => b.id === Number(id));
+    if (!id) return;
+    const lista = obtenerBoletas();
+    const encontrada = lista.find((b) => b.id === id);
     setBoleta(encontrada || null);
   }, [id]);
 
   function separarFechaHora(fechaCompleta: string) {
-    // Formato: "19-06-2026, 12:08:17 a. m."
     const partes = fechaCompleta.split(",");
-    const fecha = partes[0]?.trim() || "";
-    const hora = partes[1]?.trim() || "";
-    return { fecha, hora };
+    const fecha = partes[0]?.trim() || fechaCompleta;
+    const horaCompleta = partes[1]?.trim() || "";
+    return { fecha, horaCompleta };
+  }
+
+  function separarHoraAmPm(horaCompleta: string) {
+    const amPmMatch = horaCompleta.match(/(a\.\s*m\.|p\.\s*m\.)/i);
+    const amPm = amPmMatch ? amPmMatch[0] : "a. m.";
+    const horaTexto = horaCompleta.replace(/(a\.\s*m\.|p\.\s*m\.)/i, "").trim();
+    return { horaTexto, amPm };
   }
 
   function iniciarEdicion() {
     if (!boleta) return;
-    const { fecha, hora } = separarFechaHora(boleta.fecha);
+    const { fecha, horaCompleta } = separarFechaHora(boleta.fecha);
+    const { horaTexto, amPm } = separarHoraAmPm(horaCompleta);
     setEditando(true);
     setEditFecha(fecha);
-    setEditHora(hora);
+    setEditHoraTexto(horaTexto);
+    setEditAmPm(amPm || "a. m.");
     setEditCliente(boleta.cliente || "");
     setEditMetodoPago(boleta.metodo_pago || "");
     setEditItems(boleta.items.map((item) => ({ ...item })));
@@ -75,9 +86,9 @@ export default function DetalleBoleta() {
   }
 
   function validarHora(valor: string): boolean {
-    // Acepta HH:MM, HH:MM:SS, o con a.m./p.m.
-    const regex = /^\d{1,2}:\d{2}(:\d{2})?(\s*(a\.\s*m\.|p\.\s*m\.|am|pm))?$/i;
-    return valor.trim() === "" || regex.test(valor.trim());
+    if (valor.trim() === "") return false;
+    const regex = /^\d{1,2}:\d{2}(:\d{2})?$/;
+    return regex.test(valor.trim());
   }
 
   function validarNombre(valor: string): boolean {
@@ -95,9 +106,11 @@ export default function DetalleBoleta() {
   }
 
   function handleHoraChange(valor: string) {
-    setEditHora(valor);
-    if (!validarHora(valor)) {
-      setErrorHora("Formato inválido. Use HH:MM o HH:MM:SS (ej: 14:30:00)");
+    setEditHoraTexto(valor);
+    if (valor.trim() === "") {
+      setErrorHora("La hora es obligatoria.");
+    } else if (!validarHora(valor)) {
+      setErrorHora("Formato inválido. Use H:MM:SS (ej: 7:39:05)");
     } else {
       setErrorHora("");
     }
@@ -150,8 +163,12 @@ export default function DetalleBoleta() {
       valido = false;
     }
 
-    if (!validarHora(editHora)) {
-      setErrorHora("Formato inválido. Use HH:MM o HH:MM:SS (ej: 14:30:00)");
+    if (!validarHora(editHoraTexto)) {
+      setErrorHora(
+        editHoraTexto.trim() === ""
+          ? "La hora es obligatoria."
+          : "Formato inválido. Use H:MM:SS (ej: 7:39:05)"
+      );
       valido = false;
     }
 
@@ -167,12 +184,11 @@ export default function DetalleBoleta() {
 
     if (!valido) return;
 
-    const fechaCompleta = editHora.trim()
-      ? `${editFecha.trim()}, ${editHora.trim()}`
-      : editFecha.trim();
+    const fechaCompleta = `${editFecha.trim()}, ${editHoraTexto.trim()} ${editAmPm}`;
 
-    const boletaActualizada: Boleta = {
-      ...boleta,
+    const boletaActualizada: Partial<Boleta> = {
+      numero: boleta.numero,
+      usuario: boleta.usuario,
       fecha: fechaCompleta,
       cliente: editCliente.trim() || "Cliente sin nombre",
       metodo_pago: editMetodoPago,
@@ -182,21 +198,11 @@ export default function DetalleBoleta() {
 
     actualizarBoleta(boleta.id, boletaActualizada);
 
-    const boletas = obtenerBoletas();
-    const actualizada = boletas.find((b) => b.id === boleta.id);
-    setBoleta(actualizada || null);
+    const listaActualizada = obtenerBoletas();
+    const boletaRecargada = listaActualizada.find((b) => b.id === boleta.id);
+    setBoleta(boletaRecargada || null);
     setEditando(false);
     alert("Boleta actualizada.");
-  }
-
-  function mostrarFecha(fechaCompleta: string) {
-    const { fecha } = separarFechaHora(fechaCompleta);
-    return fecha || fechaCompleta;
-  }
-
-  function mostrarHora(fechaCompleta: string) {
-    const { hora } = separarFechaHora(fechaCompleta);
-    return hora || "";
   }
 
   if (!usuario) return null;
@@ -262,19 +268,33 @@ export default function DetalleBoleta() {
                           {errorFecha && <p className={styles.errorTexto}>{errorFecha}</p>}
                         </div>
                       </div>
+
                       <div className={styles.campoEdicion}>
                         <label>Hora:</label>
-                        <div>
-                          <input
-                            type="text"
-                            value={editHora}
-                            onChange={(e) => handleHoraChange(e.target.value)}
-                            className={`${styles.inputEdicion} ${errorHora ? styles.inputError : ""}`}
-                            placeholder="HH:MM:SS (opcional)"
-                          />
-                          {errorHora && <p className={styles.errorTexto}>{errorHora}</p>}
+                        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                          <div>
+                            <input
+                              type="text"
+                              value={editHoraTexto}
+                              onChange={(e) => handleHoraChange(e.target.value)}
+                              className={`${styles.inputEdicion} ${errorHora ? styles.inputError : ""}`}
+                              placeholder="H:MM:SS"
+                              style={{ width: "100px" }}
+                            />
+                            {errorHora && <p className={styles.errorTexto}>{errorHora}</p>}
+                          </div>
+                          <select
+                            value={editAmPm}
+                            onChange={(e) => setEditAmPm(e.target.value)}
+                            className={styles.inputEdicion}
+                            style={{ width: "90px" }}
+                          >
+                            <option value="a. m.">a. m.</option>
+                            <option value="p. m.">p. m.</option>
+                          </select>
                         </div>
                       </div>
+
                       <div className={styles.campoEdicion}>
                         <label>Cliente:</label>
                         <div>
@@ -292,10 +312,18 @@ export default function DetalleBoleta() {
                     </>
                   ) : (
                     <>
-                      <p className={styles.info}><strong>Fecha:</strong> {mostrarFecha(boleta.fecha)}</p>
-                      <p className={styles.info}><strong>Hora:</strong> {mostrarHora(boleta.fecha) || "No registrada"}</p>
-                      <p className={styles.info}><strong>Cliente:</strong> {boleta.cliente || "Sin nombre"}</p>
-                      <p className={styles.info}><strong>Vendedor:</strong> {boleta.usuario}</p>
+                      <p className={styles.info}>
+                        <strong>Fecha:</strong> {separarFechaHora(boleta.fecha).fecha}
+                      </p>
+                      <p className={styles.info}>
+                        <strong>Hora:</strong> {separarFechaHora(boleta.fecha).horaCompleta || "No registrada"}
+                      </p>
+                      <p className={styles.info}>
+                        <strong>Cliente:</strong> {boleta.cliente || "Sin nombre"}
+                      </p>
+                      <p className={styles.info}>
+                        <strong>Vendedor:</strong> {boleta.usuario}
+                      </p>
                     </>
                   )}
                 </div>
