@@ -10,10 +10,12 @@ import styles from "../inventario.module.css";
 
 type EstadoProducto = Producto | null | "no-encontrado";
 
+// Página de detalle producto — URL: /inventario/[id]
 export default function DetalleProductoPage() {
+
   const { usuario, cargando, logout } = useAuth();
   const router = useRouter();
-  const params = useParams();
+  const params = useParams(); // Lee el id que viene en la URL
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [estado, setEstado] = useState<EstadoProducto>(null);
 
@@ -48,6 +50,7 @@ export default function DetalleProductoPage() {
 
   if (!usuario) return null;
 
+  // Menú lateral reutilizado en todos los casos de la página
   const menuNav = (
     <nav className={`${styles.menuIzquierda} ${menuAbierto ? styles.menuActivo : ""}`}>
       <h2 className={styles.menu}>
@@ -65,6 +68,7 @@ export default function DetalleProductoPage() {
     </nav>
   );
 
+  /* Si el producto no existe en el inventario */
   if (estado === "no-encontrado") {
     return (
       <div className={styles.contenedor}>
@@ -94,6 +98,7 @@ export default function DetalleProductoPage() {
     );
   }
 
+  /* Mientras busca el producto en el navegador */
   if (estado === null) {
     return (
       <div className={styles.contenedor}>
@@ -108,6 +113,7 @@ export default function DetalleProductoPage() {
     );
   }
 
+  /* Muestra todos los datos del producto encontrado */
   return (
     <div className={styles.contenedor}>
       <button
@@ -124,6 +130,8 @@ export default function DetalleProductoPage() {
         <div className={styles.seccion}>
           <div className={styles.caja}>
             <h2 className={styles.tituloCaja}>{estado.nombre}</h2>
+
+            {/* Tabla con toda la información del producto */}
             <table className={styles.tablaMini} style={{ marginBottom: "20px" }}>
               <tbody>
                 <tr>
@@ -153,6 +161,7 @@ export default function DetalleProductoPage() {
                 </tr>
               </tbody>
             </table>
+
             <Link href="/inventario" className={styles.btnMini}>
               Volver al inventario
             </Link>

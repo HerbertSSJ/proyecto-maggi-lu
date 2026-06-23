@@ -201,6 +201,12 @@
   border: 1px solid #4a1835;
 }
 
+.tablaMini tbody th {
+  color: var(--color-texto-oscuro);
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+}
+
 .tablaMini td {
   padding: 10px 12px;
   border: 1px solid #e0e0e0;

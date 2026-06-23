@@ -1,5 +1,4 @@
 import { Producto } from "@/types/Producto";
-
 const STORAGE_KEY = "inventarioMimi";
 
 export function obtenerProductos(): Producto[] {
@@ -17,6 +16,5 @@ export function obtenerProductos(): Producto[] {
 
 export function guardarProductos(productos: Producto[]): void {
   if (typeof window === "undefined") return;
-
   localStorage.setItem(STORAGE_KEY, JSON.stringify(productos));
 }

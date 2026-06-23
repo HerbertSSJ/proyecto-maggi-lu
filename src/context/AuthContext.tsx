@@ -1,6 +1,8 @@
 "use client";
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
+// información y funciones  requerida
 interface AuthContextType {
   usuario: string | null;
   cargando: boolean;
@@ -8,18 +10,20 @@ interface AuthContextType {
   logout: () => void;
 }
 
+//datos globales de autenticación
 const AuthContext = createContext<AuthContextType>({
   usuario: null,
   cargando: true,
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
 });
 
+//  quién está logueado
 export function AuthProvider({ children }: { children: ReactNode }) {
+
   const [usuario, setUsuario] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
-  // Cargar usuario del localStorage al montar
   useEffect(() => {
     if (typeof window !== "undefined") {
       const usuarioGuardado = localStorage.getItem("usuarioMimi");
@@ -29,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCargando(false);
     }
   }, []);
-
+  // Guarda el usuario
   function login(nombre: string) {
     setUsuario(nombre);
     if (typeof window !== "undefined") {
@@ -37,13 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Borra al usuario
   function logout() {
     setUsuario(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("usuarioMimi");
     }
   }
-
+  //exportacion de logeado
   return (
     <AuthContext.Provider value={{ usuario, cargando, login, logout }}>
       {children}

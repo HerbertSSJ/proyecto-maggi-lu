@@ -1,74 +1,82 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./login.module.css";
 
-// Datos de los usuarios válidos del sistema
+
+// LISTA DE USUARIOS
 const USUARIOS_VALIDOS = [
   { nombre: "Ignacio", clave: "123456" },
   { nombre: "Herbert", clave: "654321" },
 ];
 
 export default function LoginPage() {
-  // Estados del formulario
   const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
-
-  // Hooks de Next.js y contexto de autenticación
   const { login } = useAuth();
   const router = useRouter();
 
-  // Función para manejar el envío del formulario
+  // FUNCIÓN: manejar el envío del formulario
+  // Se ejecuta cuando el usuario hace clic en "Ingresar"
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault(); // Prevenir recarga de página
+    e.preventDefault();
+    // ↑ MUY IMPORTANTE: evita que el formulario recargue la página
+    // (comportamiento por defecto de HTML que queremos prevenir)
 
-    // Buscar si el usuario existe con la clave correcta
+    // Buscar si existe un usuario con ese nombre Y esa clave exacta
+    // .find() recorre el array y devuelve el primer elemento que cumple la condición
+    // Si no encuentra ninguno, devuelve undefined
     const usuarioEncontrado = USUARIOS_VALIDOS.find(
       (u) => u.nombre === usuario && u.clave === clave
     );
 
-    // Si el usuario es válido
+    //LÓGICA DE AUTENTICACIÓN
     if (usuarioEncontrado) {
-      login(usuarioEncontrado.nombre); // Guardar usuario en contexto
-      router.push("/ventas"); // Ir a página de ventas
+      login(usuarioEncontrado.nombre);
+      router.push("/ventas");
     } else {
-      // Si no es válido, mostrar error
       setError("Usuario o clave incorrectos");
     }
   }
 
+  // JSX:en pantalla
   return (
     <main className={styles.contenedorLogin}>
+      {/* Caja blanca centrada en la pantalla */}
       <div className={styles.formContainer}>
+
+        {/* Título y subtítulo */}
         <h1 className={styles.titulo}>MIMImarket</h1>
         <p className={styles.subtitulo}>Sistema de Gestión de Ventas</p>
 
+        {/* onSubmit → llama a handleSubmit cuando se envía el formulario */}
         <form onSubmit={handleSubmit} className={styles.formulario}>
-          {/* Input de usuario */}
+
+          {/*INPUT USUARIO*/}
           <div className={styles.grupoInput}>
             <label htmlFor="usuario">Usuario</label>
+            {/* htmlFor debe coincidir con el id del input (accesibilidad) */}
             <input
               id="usuario"
               type="text"
               value={usuario}
               onChange={(e) => {
                 setUsuario(e.target.value);
-                setError(""); // Limpiar error cuando empieza a escribir
+                setError(""); /**limpia */
               }}
               placeholder="Ignacio o Herbert"
               className={styles.input}
             />
           </div>
 
-          {/* Input de clave */}
+          {/*INPUT CLAVE*/}
           <div className={styles.grupoInput}>
             <label htmlFor="clave">Clave</label>
             <input
               id="clave"
-              type="password"
+              type="password" /** */
               value={clave}
               onChange={(e) => {
                 setClave(e.target.value);
@@ -79,16 +87,18 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Mostrar error si existe */}
+          {/* ── MENSAJE DE ERROR ──
+          {/*Renderizado condicional: solo muestra el div si "error" no está vacío*/}
+          {/*{error && <div>} → si error es "" (falsy), no renderiza nada */}
           {error && <div className={styles.error}>{error}</div>}
 
-          {/* Botón de envío */}
+          {/* BOTÓN DE ENVÍO */}
           <button type="submit" className={styles.boton}>
             Ingresar
           </button>
         </form>
 
-        {/* Información para el usuario */}
+        {/*CREDENCIALES DE PRUEBA*/}
         <div className={styles.credencialesPrueba}>
           <p className={styles.etiqueta}>Usuarios de prueba:</p>
           <ul className={styles.lista}>
@@ -96,6 +106,7 @@ export default function LoginPage() {
             <li>Herbert / 654321</li>
           </ul>
         </div>
+
       </div>
     </main>
   );

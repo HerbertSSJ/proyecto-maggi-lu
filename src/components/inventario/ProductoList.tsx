@@ -4,17 +4,20 @@ import Link from "next/link";
 import { Producto } from "@/types/Producto";
 import styles from "@/app/inventario/inventario.module.css";
 
+// datos de inventario
 interface ProductoListProps {
   productos: Producto[];
   onEliminarProducto: (id: number) => void;
   onEditarProducto: (producto: Producto) => void;
 }
 
+// productos en tabla
 export default function ProductoList({
   productos,
   onEliminarProducto,
   onEditarProducto,
 }: ProductoListProps) {
+
   if (productos.length === 0) {
     return (
       <p style={{ marginTop: "16px", color: "#888" }}>
@@ -27,6 +30,7 @@ export default function ProductoList({
     <div className={styles.division} style={{ marginTop: "24px" }}>
       <div className={styles.caja}>
         <h2 className={styles.tituloCaja}>Listado de productos</h2>
+
         <table className={styles.tablaMini}>
           <thead>
             <tr>
@@ -39,10 +43,12 @@ export default function ProductoList({
             </tr>
           </thead>
           <tbody>
+            {/* una fila por cada producto */}
             {productos.map((producto) => (
               <tr key={producto.id}>
                 <td>{producto.nombre}</td>
                 <td>
+                  {/* pesos chilenos */}
                   {producto.precio.toLocaleString("es-CL", {
                     style: "currency",
                     currency: "CLP",
@@ -52,18 +58,24 @@ export default function ProductoList({
                 <td>{producto.fechaCreacion}</td>
                 <td>{producto.responsable}</td>
                 <td style={{ display: "flex", gap: "8px" }}>
+
+                  {/*detalle del producto*/}
                   <Link
                     href={`/inventario/${producto.id}`}
                     className={styles.btnMini}
                   >
                     Ver detalle
                   </Link>
+
+                  {/* editar*/}
                   <button
                     className={styles.btnMini}
                     onClick={() => onEditarProducto(producto)}
                   >
                     Editar
                   </button>
+
+                  {/* Elimina el producto de la lista */}
                   <button
                     className={styles.btnMini}
                     style={{ backgroundColor: "#dc3545" }}
@@ -71,6 +83,7 @@ export default function ProductoList({
                   >
                     Eliminar
                   </button>
+
                 </td>
               </tr>
             ))}

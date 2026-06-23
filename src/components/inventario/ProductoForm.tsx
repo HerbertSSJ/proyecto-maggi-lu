@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Producto } from "@/types/Producto";
 import styles from "@/app/inventario/inventario.module.css";
 
+// datos de los formularios 
 interface ProductoFormProps {
   onAgregar: (datos: Omit<Producto, "id" | "fechaCreacion" | "responsable">) => void;
   onActualizar?: (producto: Producto) => void;
@@ -11,24 +12,28 @@ interface ProductoFormProps {
   productoEditando?: Producto | null;
 }
 
+// Mensajes de error 
 interface ErroresForm {
   nombre?: string;
   precio?: string;
   cantidad?: string;
 }
 
+// Formulario para agregar o editar un producto
 export default function ProductoForm({
   onAgregar,
   onActualizar,
   onCancelar,
   productoEditando,
 }: ProductoFormProps) {
+
   const [nombre, setNombre] = useState<string>("");
   const [precio, setPrecio] = useState<string>("");
   const [cantidad, setCantidad] = useState<string>("");
   const [errores, setErrores] = useState<ErroresForm>({});
   const [exito, setExito] = useState<string>("");
 
+  // modo edicion
   useEffect(() => {
     if (productoEditando) {
       setNombre(productoEditando.nombre);
@@ -36,7 +41,7 @@ export default function ProductoForm({
       setCantidad(String(productoEditando.cantidad));
       setErrores({});
       setExito("");
-    } else {
+    } else { //modo agregar
       setNombre("");
       setPrecio("");
       setCantidad("");
@@ -64,7 +69,7 @@ export default function ProductoForm({
       nuevosErrores.cantidad = "La cantidad no puede ser negativa.";
     }
 
-    setErrores(nuevosErrores);
+    setErrores(nuevosErrores); //contador
     return Object.keys(nuevosErrores).length === 0;
   }
 
@@ -99,11 +104,15 @@ export default function ProductoForm({
   return (
     <div className={styles.division}>
       <div className={styles.caja}>
+
+        {/* El título cambia según si se está editando o agregando */}
         <h2 className={styles.tituloCaja}>
           {productoEditando ? "Editar Producto" : "Agregar Producto"}
         </h2>
 
         <form onSubmit={handleSubmit} noValidate>
+
+          {/* Campo: nombre */}
           <div className={styles.grupoInput}>
             <label htmlFor="nombre">Nombre del producto</label>
             <input
@@ -115,12 +124,11 @@ export default function ProductoForm({
               onChange={(e) => setNombre(e.target.value)}
             />
             {errores.nombre && (
-              <p className={styles.errorTexto}>
-                {errores.nombre}
-              </p>
+              <p className={styles.errorTexto}>{errores.nombre}</p>
             )}
           </div>
 
+          {/* Campo: precio */}
           <div className={styles.grupoInput}>
             <label htmlFor="precio">Precio ($)</label>
             <input
@@ -133,12 +141,11 @@ export default function ProductoForm({
               min="1"
             />
             {errores.precio && (
-              <p className={styles.errorTexto}>
-                {errores.precio}
-              </p>
+              <p className={styles.errorTexto}>{errores.precio}</p>
             )}
           </div>
 
+          {/* Campo: cantidad */}
           <div className={styles.grupoInput}>
             <label htmlFor="cantidad">Cantidad en stock</label>
             <input
@@ -151,15 +158,15 @@ export default function ProductoForm({
               min="0"
             />
             {errores.cantidad && (
-              <p className={styles.errorTexto}>
-                {errores.cantidad}
-              </p>
+              <p className={styles.errorTexto}>{errores.cantidad}</p>
             )}
           </div>
 
           <button type="submit" className={styles.btnMini}>
             {productoEditando ? "Guardar Cambios" : "Agregar Producto"}
           </button>
+
+          {/* Botón de cancelar: solo visible en modo edición */}
           {productoEditando && onCancelar && (
             <button
               type="button"
@@ -172,10 +179,9 @@ export default function ProductoForm({
           )}
         </form>
 
+        {/* Mensaje de éxito al guardar */}
         {exito && (
-          <p className={styles.exitoTexto}>
-            {exito}
-          </p>
+          <p className={styles.exitoTexto}>{exito}</p>
         )}
       </div>
     </div>

@@ -9,25 +9,33 @@ import ProductoForm from "@/components/inventario/ProductoForm";
 import ProductoList from "@/components/inventario/ProductoList";
 import styles from "./inventario.module.css";
 
+/**Inventario (/inventario)El Padre*/
 export default function InventarioPage() {
+
+  /* Contexto y navegación  */
   const { usuario, cargando, logout } = useAuth();
   const router = useRouter();
+
+  /* Estado local de la página */
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [busqueda, setBusqueda] = useState<string>("");
 
+  /*protección de ruta */
   useEffect(() => {
     if (!cargando && !usuario) {
       router.push("/login");
     }
   }, [usuario, cargando, router]);
 
+  /* cargar productos*/
   useEffect(() => {
     const cargados = obtenerProductos();
     setProductos(cargados);
   }, []);
 
+  /* Pantallas de espera */
   if (cargando) {
     return (
       <div className={styles.contenedor}>
@@ -38,6 +46,7 @@ export default function InventarioPage() {
 
   if (!usuario) return null;
 
+  /* agregar o actualizar */
   function handleAgregar(
     datos: Omit<Producto, "id" | "fechaCreacion" | "responsable">
   ) {
@@ -68,6 +77,7 @@ export default function InventarioPage() {
     guardarProductos(listaActual);
   }
 
+  /* eliminar producto */
   function handleEliminarProducto(id: number) {
     const confirmar = confirm("¿Estás seguro de que deseas eliminar este producto?");
     if (!confirmar) return;
@@ -77,10 +87,12 @@ export default function InventarioPage() {
     guardarProductos(listaActualizada);
   }
 
+  /* activar modo edición */
   function handleEditarProducto(producto: Producto) {
     setProductoEditando(producto);
   }
 
+  /* guardar cambios del producto editado */
   function handleActualizarProducto(productoActualizado: Producto) {
     const listaActualizada = productos.map((p) =>
       p.id === productoActualizado.id ? productoActualizado : p
@@ -90,16 +102,19 @@ export default function InventarioPage() {
     setProductoEditando(null);
   }
 
+  /* cancelar edición */
   function handleCancelarEdicion() {
     setProductoEditando(null);
   }
 
+  /* Filtrado por búsqueda */
   const productosFiltrados = busqueda.trim() === ""
     ? productos
     : productos.filter((p) =>
-        p.nombre.toLowerCase().includes(busqueda.toLowerCase())
-      );
+      p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    );
 
+  /* Render */
   return (
     <div className={styles.contenedor}>
       <button
@@ -109,6 +124,7 @@ export default function InventarioPage() {
         ☰
       </button>
 
+      {/* Menú lateral de navegación */}
       <nav className={`${styles.menuIzquierda} ${menuAbierto ? styles.menuActivo : ""}`}>
         <h2 className={styles.menu}>
           <img src="/Logo_MIMImarket-removebg-preview.png" alt="MIMImarket" />
@@ -130,6 +146,7 @@ export default function InventarioPage() {
         </div>
 
         <div className={styles.seccion}>
+          {/* Formulario: recibe funciones y el producto a editar (si hay) */}
           <ProductoForm
             onAgregar={handleAgregar}
             onActualizar={handleActualizarProducto}
@@ -137,6 +154,7 @@ export default function InventarioPage() {
             productoEditando={productoEditando}
           />
 
+          {/* Buscador: filtra la lista en tiempo real */}
           <div className={styles.division} style={{ marginTop: "24px" }}>
             <div className={styles.caja}>
               <h2 className={styles.tituloCaja}>Buscar producto</h2>
@@ -151,6 +169,7 @@ export default function InventarioPage() {
             </div>
           </div>
 
+          {/* Tabla: recibe la lista ya filtrada */}
           <ProductoList
             productos={productosFiltrados}
             onEliminarProducto={handleEliminarProducto}
